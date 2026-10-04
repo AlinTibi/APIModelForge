@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
+
+      - name: Build Windows application
+        run: wails build -clean -s
+
+      - name: Package release
+        id: package
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}"
+          $zipName = "APIModelForge-$version-win-x64.zip"
+          $checksumName = "$zipName.sha256"
+
+          New-Item -ItemType Directory -Force -Path stage | Out-Null
+          Copy-Item "build/bin/APIModelForge.exe" "stage/APIModelForge.exe"
+          Copy-Item "README.md" "stage/README.md"
+          Copy-Item "LICENSE" "stage/LICENSE"
+
+          Compress-Archive -Path "stage/*" -DestinationPath $zipName -CompressionLevel Optimal
+          $hash = (Get-FileHash $zipName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $zipName" | Set-Content -NoNewline $checksumName
+
+          "zip_name=$zipName" >> $env:GITHUB_OUTPUT
+          "checksum_name=$checksumName" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release create "${{ github.ref_name }}"
+          "${{ steps.package.outputs.zip_name }}"
+          "${{ steps.package.outputs.checksum_name }}"
+          --title "API Model Forge ${{ github.ref_name }}"
+          --generate-notes

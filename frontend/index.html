@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>API Model Forge</title>
+</head>
+<body>
+<div id="app">
+    <header class="toolbar">
+        <div class="brand">
+            <span class="brand-mark">&lt;/&gt;</span>
+            <span class="brand-name">API Model Forge</span>
+        </div>
+        <div class="toolbar-group">
+            <button id="btn-load" class="btn">Load File</button>
+            <button id="btn-validate" class="btn">Validate</button>
+            <button id="btn-clear" class="btn">Clear</button>
+        </div>
+        <div class="toolbar-group toolbar-group-right">
+            <label class="root-name-field">
+                <span>Root name</span>
+                <input id="root-name" type="text" value="Root" spellcheck="false" autocomplete="off"/>
+            </label>
+            <button id="btn-generate" class="btn btn-primary">
+                Generate <kbd>Ctrl+Enter</kbd>
+            </button>
+        </div>
+    </header>
+
+    <main class="panes">
+        <section class="pane pane-input" id="pane-input">
+            <div class="pane-header">
+                <span>JSON Input</span>
+            </div>
+            <textarea id="json-input" class="json-input" spellcheck="false"
+                      placeholder="Paste a JSON object or array of objects here, or use Load File..."></textarea>
+        </section>
+
+        <div class="resizer" id="resizer" role="separator" aria-orientation="vertical"></div>
+
+        <section class="pane pane-output" id="pane-output">
+            <div class="pane-header pane-header-output">
+                <div class="tabs" id="language-tabs"></div>
+                <div class="output-actions">
+                    <span id="model-count" class="model-count"></span>
+                    <button id="btn-copy" class="btn btn-small" disabled>Copy</button>
+                    <button id="btn-save" class="btn btn-small" disabled>Save</button>
+                </div>
+            </div>
+            <pre class="code-view"><code id="code-output" class="code-output">// Generated code will appear here after you click Generate.</code></pre>
+        </section>
+    </main>
+
+    <footer class="status-bar">
+        <span id="status-icon" class="status-icon"></span>
+        <span id="status-text">Ready.</span>
+    </footer>
+</div>
+<script src="./src/main.ts" type="module"></script>
+</body>
+</html>

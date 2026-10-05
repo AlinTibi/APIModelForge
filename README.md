@@ -9,9 +9,18 @@ hand.
 It's a native Windows desktop app (Go + [Wails](https://wails.io)), runs
 fully offline, and never sends your JSON anywhere.
 
+## Current release and download
+
+[API Model Forge v1.0.0](https://github.com/AlinTibi/APIModelForge/releases/tag/v1.0.0)
+is the current Windows x64 release.
+
+[Download the portable ZIP](https://github.com/AlinTibi/APIModelForge/releases/download/v1.0.0/APIModelForge-v1.0.0-win-x64.zip),
+extract it, and run `APIModelForge.exe`. Keep the extracted files together.
+Microsoft Edge WebView2 Runtime is required. Install it separately if missing.
+
 ## Screenshots
 
-_Coming soon._
+![API Model Forge Windows application](docs/images/main.webp)
 
 ## Supported output languages
 
@@ -47,12 +56,17 @@ _Coming soon._
 
 Requirements:
 
-- Go 1.22+
-- Node.js 18+
+- Go 1.25+
+- Node.js 22.12+
 - The [Wails v2 CLI](https://wails.io/docs/gettingstarted/installation):
-  `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
+  `go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0`
 
 ```powershell
+cd frontend
+npm ci
+npm run build
+cd ..
+
 # Run the Go test suite
 go test ./...
 
@@ -79,12 +93,22 @@ Generation logic is fully decoupled from the UI:
 API Model Forge is fully offline. It has no telemetry, no analytics, and no
 network calls of any kind — your JSON never leaves your machine.
 
-## Status
-
-Early, functional v1. The core generation pipeline and all five language
-outputs are implemented and tested. Packaged installers and more output
-options are possible future steps.
-
 ## License
 
 [MIT](LICENSE)
+
+## Support and security
+
+For software questions, email [support@almarfeld.com](mailto:support@almarfeld.com).
+Report reproducible bugs and feature requests in [API Model Forge issues](https://github.com/AlinTibi/APIModelForge/issues).
+Do not post private files or credentials in public issues.
+
+Report vulnerabilities privately to [security@almarfeld.com](mailto:security@almarfeld.com).
+See [SUPPORT.md](SUPPORT.md) and [SECURITY.md](SECURITY.md).
+
+---
+
+**ALMARFELD** · Independent software development · [almarfeld.com](https://almarfeld.com)
+
+[API Model Forge product page](https://almarfeld.com/software/api-model-forge/) ·
+[General enquiries](mailto:contact@almarfeld.com) · [MIT license](LICENSE)

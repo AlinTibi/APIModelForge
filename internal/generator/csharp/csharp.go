@@ -41,8 +41,9 @@ func Generate(types []*schema.Node) string {
 
 func writeClass(sb *strings.Builder, n *schema.Node, needsList, needsJSONAttr *bool) {
 	fmt.Fprintf(sb, "public class %s\n{\n", n.Name)
+	used := map[string]bool{n.Name: true}
 	for _, f := range n.Fields {
-		propName := schema.PascalCase(f.JSONName)
+		propName := schema.UniqueIdentifier(schema.PascalCase(f.JSONName), used)
 		typeStr := typeName(f.Node, needsList)
 
 		if propName != f.JSONName {
@@ -85,7 +86,5 @@ func baseType(n *schema.Node, needsList *bool) string {
 }
 
 func quote(s string) string {
-	s = strings.ReplaceAll(s, `\`, `\\`)
-	s = strings.ReplaceAll(s, `"`, `\"`)
-	return `"` + s + `"`
+	return schema.QuoteString(s)
 }

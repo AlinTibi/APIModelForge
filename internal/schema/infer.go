@@ -29,7 +29,7 @@ func Infer(raw []byte, rootName string) (*Schema, error) {
 		rootName = "Root"
 	}
 
-	assignNames(root, rootName, make(map[string]*Node))
+	assignNames(root, rootName, reservedTypeNames())
 
 	return &Schema{Root: root}, nil
 }

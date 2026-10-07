@@ -270,6 +270,15 @@ func TestDefaultRootNameIsRoot(t *testing.T) {
 	}
 }
 
+func TestModelNamesAvoidRendererRuntimeTypes(t *testing.T) {
+	for _, name := range []string{"System", "List", "String", "Any", "Optional", "JsonPropertyName"} {
+		s := mustInfer(t, `{"id":1}`, name)
+		if s.Root.Name != name+"2" {
+			t.Errorf("runtime name %s was not reserved: %s", name, s.Root.Name)
+		}
+	}
+}
+
 func typeNames(nodes []*Node) []string {
 	names := make([]string, len(nodes))
 	for i, n := range nodes {

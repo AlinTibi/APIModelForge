@@ -3,7 +3,9 @@ package golang
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
+	"unicode"
 
 	"APIModelForge/internal/schema"
 )
@@ -21,19 +23,74 @@ func Generate(types []*schema.Node) string {
 
 	var header strings.Builder
 	header.WriteString("package models\n\n")
+	for _, t := range types {
+		if needsExplicitNames(t) {
+			header.WriteString("import \"encoding/json\"\n\n")
+			break
+		}
+	}
 
 	return header.String() + body.String()
 }
 
 func writeStruct(sb *strings.Builder, n *schema.Node) {
 	fmt.Fprintf(sb, "type %s struct {\n", n.Name)
+	used := map[string]bool{}
+	if needsExplicitNames(n) {
+		used["MarshalJSON"] = true
+		used["UnmarshalJSON"] = true
+	}
+	names := []string{}
 	for _, f := range n.Fields {
-		fieldName := schema.PascalCase(f.JSONName)
+		fieldName := schema.UniqueIdentifier(schema.PascalCase(f.JSONName), used)
+		names = append(names, fieldName)
 		typeStr := typeName(f.Node)
 		tag := jsonTag(f.JSONName, f.Node.Nullable)
+		if needsExplicitNames(n) {
+			tag = "`json:\"-\"`"
+		}
 		fmt.Fprintf(sb, "\t%s %s %s\n", fieldName, typeStr, tag)
 	}
 	sb.WriteString("}\n")
+	if needsExplicitNames(n) {
+		writeJSONMethods(sb, n, names)
+	}
+}
+
+// encoding/json cannot represent every JSON key in a struct tag: commas,
+// an empty name, '-' and certain punctuation/control characters need explicit
+// mapping. Keep these properties instead of silently changing wire names.
+func needsExplicitNames(n *schema.Node) bool {
+	for _, f := range n.Fields {
+		if f.JSONName == "" || f.JSONName == "-" || strings.ContainsRune(f.JSONName, ',') {
+			return true
+		}
+		for _, r := range f.JSONName {
+			if !unicode.IsLetter(r) && !unicode.IsDigit(r) && !strings.ContainsRune("!#$%&()*+-./:;<=>?@[]^_{|}~ ", r) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func writeJSONMethods(sb *strings.Builder, n *schema.Node, names []string) {
+	fmt.Fprintf(sb, "\nfunc (value %s) MarshalJSON() ([]byte, error) {\n\tfields := map[string]interface{}{}\n", n.Name)
+	for i, f := range n.Fields {
+		if f.Node.Nullable {
+			fmt.Fprintf(sb, "\tif value.%s != nil {\n", names[i])
+		}
+		fmt.Fprintf(sb, "\tfields[%s] = value.%s\n", strconv.Quote(f.JSONName), names[i])
+		if f.Node.Nullable {
+			sb.WriteString("\t}\n")
+		}
+	}
+	sb.WriteString("\treturn json.Marshal(fields)\n}\n")
+	fmt.Fprintf(sb, "\nfunc (value *%s) UnmarshalJSON(data []byte) error {\n\tvar fields map[string]json.RawMessage\n\tif err := json.Unmarshal(data, &fields); err != nil { return err }\n", n.Name)
+	for i, f := range n.Fields {
+		fmt.Fprintf(sb, "\tif raw, ok := fields[%s]; ok {\n\t\tif err := json.Unmarshal(raw, &value.%s); err != nil { return err }\n\t}\n", strconv.Quote(f.JSONName), names[i])
+	}
+	sb.WriteString("\treturn nil\n}\n")
 }
 
 func jsonTag(jsonName string, nullable bool) string {
@@ -41,7 +98,11 @@ func jsonTag(jsonName string, nullable bool) string {
 	if nullable {
 		opts += ",omitempty"
 	}
-	return "`json:\"" + opts + "\"`"
+	tag := "json:" + strconv.Quote(opts)
+	if strings.ContainsRune(tag, '`') {
+		return strconv.Quote(tag)
+	}
+	return "`" + tag + "`"
 }
 
 func typeName(n *schema.Node) string {

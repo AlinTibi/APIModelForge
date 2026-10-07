@@ -2,10 +2,17 @@
   "$schema": "https://wails.io/schemas/config.v2.json",
   "name": "APIModelForge",
   "outputfilename": "APIModelForge",
-  "frontend:install": "npm install",
+  "frontend:install": "npm ci",
   "frontend:build": "npm run build",
   "frontend:dev:watcher": "npm run dev",
   "frontend:dev:serverUrl": "auto",
+  "info": {
+    "productName": "API Model Forge",
+    "productVersion": "1.0.1",
+    "companyName": "ALMARFELD",
+    "copyright": "Copyright AlinTibi",
+    "comments": "Offline JSON model generation"
+  },
   "author": {
     "name": "AlinTibi",
     "email": "contact@almarfeld.com"

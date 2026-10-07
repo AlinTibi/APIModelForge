@@ -73,12 +73,19 @@ func TestPythonNullableFieldUsesOptionalWithNoneDefault(t *testing.T) {
 // beyond string matching. It skips (not fails) when no interpreter is on
 // PATH, since CI/build environments are not guaranteed to have one.
 func TestPythonSyntaxIsValid(t *testing.T) {
-	python, err := exec.LookPath("python3")
-	if err != nil {
-		python, err = exec.LookPath("python")
+	python := ""
+	for _, candidate := range []string{"python3", "python"} {
+		path, err := exec.LookPath(candidate)
+		if err != nil {
+			continue
+		}
+		if out, err := exec.Command(path, "--version").CombinedOutput(); err == nil && !strings.Contains(string(out), "was not found") {
+			python = path
+			break
+		}
 	}
-	if err != nil {
-		t.Skip("no python interpreter found on PATH; skipping syntax validation")
+	if python == "" {
+		t.Skip("no working Python interpreter found on PATH")
 	}
 	// On Windows, "python" can resolve to a Microsoft Store app-execution
 	// alias stub even when no real interpreter is installed; probe before

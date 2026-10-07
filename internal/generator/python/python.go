@@ -55,8 +55,11 @@ func writeDataclass(sb *strings.Builder, n *schema.Node, imports map[string]bool
 		sb.WriteString("    pass\n")
 		return
 	}
+	used := map[string]bool{"__annotations__": true, "__dict__": true, "__weakref__": true, "__slots__": true, "__class__": true, "__dataclass_fields__": true, "__dataclass_params__": true, "__init__": true, "__new__": true, "__repr__": true, "__eq__": true, "__hash__": true, "__module__": true, "__qualname__": true, "__match_args__": true}
 	for _, f := range n.Fields {
 		name, renamed := propertyName(f.JSONName)
+		name = schema.UniqueIdentifier(name, used)
+		renamed = renamed || name != f.JSONName
 		typeStr := typeName(f.Node, imports)
 		if f.Node.Nullable {
 			imports["Optional"] = true
@@ -75,9 +78,11 @@ func writeDataclass(sb *strings.Builder, n *schema.Node, imports map[string]bool
 // propertyName returns a valid Python identifier for jsonName, and whether
 // it had to be changed from the original JSON key.
 func propertyName(jsonName string) (string, bool) {
-	candidate := jsonName
-	if !schema.IsValidBareIdentifier(candidate) {
-		candidate = schema.SanitizeIdentifier(candidate)
+	candidate := schema.SanitizeIdentifier(jsonName)
+	// Dunder fields can replace Python/dataclass hooks even when they are
+	// syntactically valid identifiers (for example __post_init__).
+	if strings.HasPrefix(candidate, "__") && strings.HasSuffix(candidate, "__") {
+		candidate = "field" + candidate
 	}
 	if reservedWords[candidate] {
 		candidate += "_"
@@ -109,7 +114,5 @@ func typeName(n *schema.Node, imports map[string]bool) string {
 }
 
 func quote(s string) string {
-	s = strings.ReplaceAll(s, `\`, `\\`)
-	s = strings.ReplaceAll(s, `"`, `\"`)
-	return `"` + s + `"`
+	return schema.QuoteString(s)
 }

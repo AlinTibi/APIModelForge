@@ -10,6 +10,12 @@ import (
 // Go-style identifier. It is used for generated type names, which must be
 // valid and idiomatic across every supported target language.
 func PascalCase(s string) string {
+	s = strings.Map(func(r rune) rune {
+		if r > 127 {
+			return '_'
+		}
+		return r
+	}, s)
 	words := splitWords(s)
 	var b strings.Builder
 	for _, w := range words {
@@ -106,17 +112,17 @@ func IsValidBareIdentifier(s string) bool {
 func SanitizeIdentifier(s string) string {
 	var b strings.Builder
 	for _, r := range s {
-		if r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r) {
+		if r == '_' || (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
 			b.WriteRune(r)
 		} else {
 			b.WriteRune('_')
 		}
 	}
 	out := b.String()
-	if out == "" {
+	if strings.Trim(out, "_") == "" {
 		return "field"
 	}
-	if unicode.IsDigit(rune(out[0])) {
+	if out[0] >= '0' && out[0] <= '9' {
 		out = "_" + out
 	}
 	return out

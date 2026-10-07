@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 )
 
 // orderedObject is a JSON object decoded while preserving the original key
@@ -55,8 +56,11 @@ func decodeJSON(raw []byte) (interface{}, error) {
 
 	// Reject trailing garbage after the first value (e.g. "1 2" or two
 	// concatenated objects), which json.Decoder otherwise ignores.
-	if _, err := dec.Token(); err == nil {
-		return nil, &ParseError{Message: "unexpected content after the JSON value", Offset: dec.InputOffset()}
+	if _, err := dec.Token(); err != io.EOF {
+		if err == nil {
+			err = fmt.Errorf("unexpected content after the JSON value")
+		}
+		return nil, wrapDecodeError(err, raw, dec.InputOffset())
 	}
 
 	return value, nil
@@ -82,6 +86,9 @@ func decodeTokenValue(dec *json.Decoder, tok json.Token) (interface{}, error) {
 					return nil, err
 				}
 				key, _ := keyTok.(string)
+				if _, exists := obj.values[key]; exists {
+					return nil, fmt.Errorf("duplicate JSON property %q", key)
+				}
 
 				val, err := decodeValue(dec)
 				if err != nil {

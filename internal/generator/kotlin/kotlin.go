@@ -31,9 +31,23 @@ func Generate(types []*schema.Node) string {
 }
 
 func writeDataClass(sb *strings.Builder, n *schema.Node) {
+	if len(n.Fields) == 0 {
+		fmt.Fprintf(sb, "class %s\n", n.Name)
+		return
+	}
 	fmt.Fprintf(sb, "data class %s(\n", n.Name)
+	used := map[string]bool{}
 	for i, f := range n.Fields {
-		name := propertyName(f.JSONName)
+		base := propertyName(f.JSONName)
+		bare := strings.Trim(base, "`")
+		unique := schema.UniqueIdentifier(bare, used)
+		name := unique
+		if reservedWords[unique] {
+			name = "`" + unique + "`"
+		}
+		if unique != f.JSONName {
+			fmt.Fprintf(sb, "    // json: %s\n", schema.QuoteString(f.JSONName))
+		}
 		typeStr := typeName(f.Node)
 		line := fmt.Sprintf("    val %s: %s", name, typeStr)
 		if f.Node.Nullable {
@@ -49,10 +63,11 @@ func writeDataClass(sb *strings.Builder, n *schema.Node) {
 }
 
 func propertyName(jsonName string) string {
-	if schema.IsValidBareIdentifier(jsonName) && !reservedWords[jsonName] {
-		return jsonName
+	candidate := schema.SanitizeIdentifier(jsonName)
+	if !reservedWords[candidate] {
+		return candidate
 	}
-	return "`" + strings.ReplaceAll(jsonName, "`", "") + "`"
+	return "`" + candidate + "`"
 }
 
 func typeName(n *schema.Node) string {

@@ -112,6 +112,10 @@ function renderActiveCode(): void {
 async function generate(): Promise<void> {
     const text = jsonInput.value;
     if (text.trim() === '') {
+        currentFiles = [];
+        activeLanguage = null;
+        renderTabs();
+        renderActiveCode();
         setStatus('Enter or load some JSON first.', 'error');
         return;
     }
@@ -173,6 +177,10 @@ async function validate(): Promise<void> {
 
 function clearInput(): void {
     jsonInput.value = '';
+    currentFiles = [];
+    activeLanguage = null;
+    renderTabs();
+    renderActiveCode();
     jsonInput.focus();
     setStatus('Input cleared.');
 }

@@ -18,6 +18,16 @@ is the current Windows x64 release.
 extract it, and run `APIModelForge.exe`. Keep the extracted files together.
 Microsoft Edge WebView2 Runtime is required. Install it separately if missing.
 
+## v1.0.1 release candidate
+
+The next patch is prepared for review, not yet released. See the
+[v1.0.1 release notes](docs/release-notes-v1.0.1.md) for JSON validation,
+identifier safety, escaping and the distinct Windows icon.
+
+Kotlin and Python models record renamed JSON keys in comments; callers must
+configure their serializer's name mapping if those keys differ from the
+generated property names. Go and C# output preserve serialized names.
+
 ## Screenshots
 
 ![API Model Forge Windows application](docs/images/main.webp)
@@ -74,7 +84,7 @@ go test ./...
 wails dev
 
 # Build a production executable (build/bin/APIModelForge.exe)
-wails build
+wails build -clean -s -webview2 browser
 ```
 
 ## Architecture

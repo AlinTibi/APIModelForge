@@ -38,27 +38,20 @@ jobs:
         run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
 
       - name: Build Windows application
-        run: wails build -clean -s
+        run: wails build -clean -s -webview2 browser
+
+      - name: Go vet and test
+        run: |
+          go vet ./...
+          go test ./...
 
       - name: Package release
         id: package
         shell: pwsh
         run: |
-          $version = "${{ github.ref_name }}"
-          $zipName = "APIModelForge-$version-win-x64.zip"
-          $checksumName = "$zipName.sha256"
-
-          New-Item -ItemType Directory -Force -Path stage | Out-Null
-          Copy-Item "build/bin/APIModelForge.exe" "stage/APIModelForge.exe"
-          Copy-Item "README.md" "stage/README.md"
-          Copy-Item "LICENSE" "stage/LICENSE"
-
-          Compress-Archive -Path "stage/*" -DestinationPath $zipName -CompressionLevel Optimal
-          $hash = (Get-FileHash $zipName -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash  $zipName" | Set-Content -NoNewline $checksumName
-
-          "zip_name=$zipName" >> $env:GITHUB_OUTPUT
-          "checksum_name=$checksumName" >> $env:GITHUB_OUTPUT
+          $package = & ./scripts/package-release.ps1 -Tag "${{ github.ref_name }}" -OutputDirectory .
+          "zip_name=$($package.Zip)" >> $env:GITHUB_OUTPUT
+          "checksum_name=$($package.Checksum)" >> $env:GITHUB_OUTPUT
 
       - name: Create GitHub Release
         env:

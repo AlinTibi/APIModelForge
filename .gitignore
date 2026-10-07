@@ -1,3 +1,4 @@
 build/bin
+build/rc
 node_modules
 frontend/dist

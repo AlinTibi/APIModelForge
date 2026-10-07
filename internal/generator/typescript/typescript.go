@@ -65,7 +65,5 @@ func typeName(n *schema.Node) string {
 }
 
 func quote(s string) string {
-	s = strings.ReplaceAll(s, `\`, `\\`)
-	s = strings.ReplaceAll(s, `"`, `\"`)
-	return `"` + s + `"`
+	return schema.QuoteString(s)
 }

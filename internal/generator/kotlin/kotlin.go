@@ -3,6 +3,7 @@ package kotlin
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"APIModelForge/internal/schema"
@@ -37,10 +38,11 @@ func writeDataClass(sb *strings.Builder, n *schema.Node) {
 	}
 	fmt.Fprintf(sb, "data class %s(\n", n.Name)
 	used := map[string]bool{}
+	getters := map[string]bool{}
 	for i, f := range n.Fields {
 		base := propertyName(f.JSONName)
 		bare := strings.Trim(base, "`")
-		unique := schema.UniqueIdentifier(bare, used)
+		unique := uniquePropertyName(bare, used, getters)
 		name := unique
 		if reservedWords[unique] {
 			name = "`" + unique + "`"
@@ -60,6 +62,29 @@ func writeDataClass(sb *strings.Builder, n *schema.Node) {
 		sb.WriteString("\n")
 	}
 	sb.WriteString(")\n")
+}
+
+// JVM getters capitalize the first character, so distinct Kotlin names such
+// as userId and UserId can still clash in bytecode. Allocate in both scopes.
+func uniquePropertyName(base string, names, getters map[string]bool) string {
+	for suffix := 1; ; suffix++ {
+		name := base
+		if suffix > 1 {
+			name += strconv.Itoa(suffix)
+		}
+		getter := getterName(name)
+		if !names[name] && !getters[getter] {
+			names[name], getters[getter] = true, true
+			return name
+		}
+	}
+}
+
+func getterName(name string) string {
+	if len(name) > 2 && strings.HasPrefix(name, "is") && !(name[2] >= 'a' && name[2] <= 'z') {
+		return name
+	}
+	return "get" + strings.ToUpper(name[:1]) + name[1:]
 }
 
 func propertyName(jsonName string) string {

@@ -63,3 +63,16 @@ func TestKotlinBalancedParens(t *testing.T) {
 		t.Fatalf("unbalanced parens in generated code:\n%s", code)
 	}
 }
+
+func TestKotlinAvoidsJVMGetterCollisions(t *testing.T) {
+	s, err := schema.Infer([]byte(`{"userId":1,"UserId":2,"UserId2":3,"user-id":4,"user_id":5,"isReady":true,"IsReady":false,"is_ready":true,"Is_ready":false}`), "Root")
+	if err != nil {
+		t.Fatal(err)
+	}
+	code := Generate(schema.CollectTypes(s.Root))
+	for _, want := range []string{"val userId: Long", "val UserId2: Long", "val UserId22: Long", "val user_id: Long", "val user_id2: Long", "val isReady: Boolean", "val IsReady: Boolean", "val is_ready: Boolean", "val Is_ready: Boolean"} {
+		if !strings.Contains(code, want) {
+			t.Errorf("missing property %q\n%s", want, code)
+		}
+	}
+}

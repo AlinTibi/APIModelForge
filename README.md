@@ -11,17 +11,16 @@ fully offline, and never sends your JSON anywhere.
 
 ## Current release and download
 
-[API Model Forge v1.0.0](https://github.com/AlinTibi/APIModelForge/releases/tag/v1.0.0)
+[API Model Forge v1.0.1](https://github.com/AlinTibi/APIModelForge/releases/tag/v1.0.1)
 is the current Windows x64 release.
 
-[Download the portable ZIP](https://github.com/AlinTibi/APIModelForge/releases/download/v1.0.0/APIModelForge-v1.0.0-win-x64.zip),
+[Download the portable ZIP](https://github.com/AlinTibi/APIModelForge/releases/download/v1.0.1/APIModelForge-v1.0.1-win-x64.zip),
 extract it, and run `APIModelForge.exe`. Keep the extracted files together.
 Microsoft Edge WebView2 Runtime is required. Install it separately if missing.
 
-## v1.0.1 release candidate
+## v1.0.1 changes
 
-The next patch is prepared for review, not yet released. See the
-[v1.0.1 release notes](docs/release-notes-v1.0.1.md) for JSON validation,
+See the [v1.0.1 release notes](docs/release-notes-v1.0.1.md) for JSON validation,
 identifier safety, escaping and the distinct Windows icon.
 
 Kotlin and Python models record renamed JSON keys in comments; callers must
